@@ -1,54 +1,55 @@
-name: Build & Deploy
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - main
-      
+      - main   # Trigger on pushes to main branch
+  pull_request:
+
 env:
-  CI: false
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 24
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: npm install
 
-      - name: Build project
+      - name: Run build
         run: npm run build
 
-      - name: Upload production-ready build files
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: production-files
-          path: ./build
+          name: build-output
+          path: build/
 
   deploy:
-    name: Deploy
-    needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    needs: build
 
     steps:
-      - name: Download artifact
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: production-files
-          path: ./build
+          name: build-output
+          path: build/
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.TOKEN }}
-          publish_dir: ./build
+      - name: Deploy to server
+        run: |
+          echo "Deploying build..."
+          # Replace with your actual deploy command
+          # e.g., scp, rsync, or cloud provider CLI
